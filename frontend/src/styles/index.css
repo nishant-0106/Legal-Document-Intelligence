@@ -1,0 +1,175 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ─── CSS design tokens ───────────────────────────────────────────────────── */
+@layer base {
+  :root {
+    --bg:          #F8F9FB;
+    --surface:     #FFFFFF;
+    --surface-2:   #F1F4F9;
+    --border:      #E2E6EC;
+    --border-2:    #D0D7E2;
+    --text:        #0F172A;
+    --text-2:      #4B5563;
+    --text-3:      #9CA3AF;
+    --brand:       #185FA5;
+    --brand-hover: #0C447C;
+    --risk-low:    #1D9E75;
+    --risk-med:    #F59E0B;
+    --risk-high:   #EF4444;
+  }
+
+  .dark {
+    --bg:          #0D1117;
+    --surface:     #161B22;
+    --surface-2:   #1C2330;
+    --border:      #2D3748;
+    --border-2:    #3D4F65;
+    --text:        #F0F6FF;
+    --text-2:      #94A3B8;
+    --text-3:      #64748B;
+    --brand:       #378ADD;
+    --brand-hover: #85B7EB;
+    --risk-low:    #34D399;
+    --risk-med:    #FBBF24;
+    --risk-high:   #F87171;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; }
+
+  html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    color-scheme: light dark;
+  }
+
+  body {
+    margin: 0; padding: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif;
+    font-size: 14px;
+  }
+
+  .typing-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--text-3);
+    animation: blink 1.2s infinite;
+  }
+  .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+  .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+
+  /* Sidebar nav items */
+  .nav-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 9px 10px; border-radius: 8px; cursor: pointer;
+    color: rgba(255,255,255,0.55); font-size: 13px; font-weight: 500;
+    transition: all 0.15s; user-select: none; margin-bottom: 2px;
+  }
+  .nav-item:hover  { background: rgba(255,255,255,0.07); color: rgba(255,255,255,0.9); }
+  .nav-item.active { background: rgba(55,138,221,0.25); color: #fff; }
+
+  /* Toggle */
+  .toggle-track {
+    position: relative; width: 40px; height: 22px;
+    border-radius: 11px; background: var(--border-2);
+    cursor: pointer; border: none; transition: background 0.2s;
+    flex-shrink: 0;
+  }
+  .toggle-track.on { background: var(--brand); }
+  .toggle-track::after {
+    content: '';
+    position: absolute; width: 16px; height: 16px;
+    border-radius: 50%; background: #fff;
+    top: 3px; left: 3px;
+    transition: left 0.2s;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+  }
+  .toggle-track.on::after { left: 21px; }
+}
+
+/* ─── Components layer ───────────────────────────────────────────────────── */
+@layer components {
+  /* Buttons */
+  .btn {
+    @apply inline-flex items-center justify-center font-semibold rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-brand-400/20 disabled:opacity-50 disabled:pointer-events-none;
+  }
+  .btn-primary {
+    @apply bg-brand-600 text-white hover:bg-brand-800 active:scale-95 shadow-sm shadow-brand-600/10;
+  }
+  .btn-secondary {
+    @apply bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700 active:scale-95;
+  }
+  .btn-danger {
+    @apply bg-red-600 text-white hover:bg-red-700 active:scale-95 shadow-sm shadow-red-600/10;
+  }
+  .btn-ghost {
+    @apply text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800/50;
+  }
+  .btn-outline {
+    @apply border border-gray-200 dark:border-gray-700 bg-transparent text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800/50 active:scale-95;
+  }
+
+  /* Cards */
+  .card {
+    @apply bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-5 shadow-card;
+  }
+  .card-sm {
+    @apply bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-3 shadow-sm;
+  }
+
+  /* Badges */
+  .badge {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold tracking-wider;
+  }
+  .badge-green {
+    @apply bg-emerald-50 dark:bg-emerald-950/20 text-emerald-700 dark:text-emerald-400 border border-emerald-200/50 dark:border-emerald-800/30;
+  }
+  .badge-red {
+    @apply bg-red-50 dark:bg-red-950/20 text-red-700 dark:text-red-400 border border-red-200/50 dark:border-red-800/30;
+  }
+  .badge-amber {
+    @apply bg-amber-50 dark:bg-amber-950/20 text-amber-700 dark:text-amber-400 border border-amber-200/50 dark:border-amber-800/30;
+  }
+  .badge-blue {
+    @apply bg-blue-50 dark:bg-blue-950/20 text-blue-700 dark:text-blue-400 border border-blue-200/50 dark:border-blue-800/30;
+  }
+  .badge-gray {
+    @apply bg-gray-100 dark:bg-gray-800/50 text-gray-700 dark:text-gray-300 border border-gray-200/50 dark:border-gray-700/30;
+  }
+
+  /* Inputs & Forms */
+  .form-label {
+    @apply block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1.5 uppercase tracking-wider;
+  }
+  .form-input {
+    @apply w-full px-3.5 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-sm placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-brand-400/20 focus:border-brand-400 transition-all;
+  }
+
+  /* Skeleton animation */
+  .skeleton {
+    @apply bg-gray-100 dark:bg-gray-800 animate-pulse rounded-md;
+  }
+
+  /* Chat bubble styling */
+  .bubble-user {
+    @apply rounded-2xl rounded-tr-none;
+  }
+  .bubble-ai {
+    @apply rounded-2xl rounded-tl-none border border-gray-200/50 dark:border-gray-700/30;
+  }
+}
+
+/* ─── Utility overrides ───────────────────────────────────────────────────── */
+@layer utilities {
+  .text-token   { color: var(--text); }
+  .text-token-2 { color: var(--text-2); }
+  .text-token-3 { color: var(--text-3); }
+  .bg-token     { background: var(--bg); }
+  .bg-surface   { background: var(--surface); }
+  .bg-surface-2 { background: var(--surface-2); }
+  .border-token { border-color: var(--border); }
+}
