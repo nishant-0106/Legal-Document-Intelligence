@@ -32,3 +32,7 @@ dist-ssr
 
 # Build
 *.tsbuildinfo
+target/
+
+# H2 Database
+backend/data/

@@ -4,38 +4,27 @@ import com.lexintel.api.dto.AuthResponse;
 import com.lexintel.api.dto.LoginRequest;
 import com.lexintel.api.dto.RegisterRequest;
 import com.lexintel.api.dto.UserDto;
+import com.lexintel.api.entity.UserEntity;
+import com.lexintel.api.repository.UserRepository;
+import com.lexintel.api.security.JwtUtil;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
-import java.util.concurrent.ConcurrentHashMap;
 
 @RestController
 @RequestMapping("/api/v1/auth")
-@CrossOrigin(origins = "http://localhost:5173")
 public class AuthController {
 
-    private static class RegisteredUser {
-        final UserDto user;
-        final String password;
+    private final UserRepository userRepository;
+    private final JwtUtil jwtUtil;
+    private final PasswordEncoder passwordEncoder;
 
-        RegisteredUser(UserDto user, String password) {
-            this.user = user;
-            this.password = password;
-        }
-    }
-
-    private static final ConcurrentHashMap<String, RegisteredUser> users = new ConcurrentHashMap<>();
-
-    static {
-        // Pre-populate with default mock users
-        users.put("alex@techcorp.com", new RegisteredUser(
-                new UserDto(1L, "Alex Chen", "alex@techcorp.com", "Senior Legal Counsel", "TechCorp Inc.", null),
-                "password"
-        ));
-        users.put("demo@lexintel.ai", new RegisteredUser(
-                new UserDto(2L, "Demo User", "demo@lexintel.ai", "Senior Legal Counsel", "TechCorp Inc.", null),
-                "demo123"
-        ));
+    public AuthController(UserRepository userRepository, JwtUtil jwtUtil, PasswordEncoder passwordEncoder) {
+        this.userRepository = userRepository;
+        this.jwtUtil = jwtUtil;
+        this.passwordEncoder = passwordEncoder;
     }
 
     @PostMapping("/login")
@@ -47,15 +36,14 @@ public class AuthController {
         }
 
         String emailKey = request.email().toLowerCase().trim();
-        RegisteredUser registered = users.get(emailKey);
-        if (registered != null && registered.password.equals(request.password())) {
-            String token = "mock_jwt_token_" + System.currentTimeMillis();
-            return ResponseEntity.ok(new AuthResponse(token, registered.user));
-        }
-
-        // Invalid credentials rejection
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                .body("Invalid email or password");
+        return userRepository.findByEmail(emailKey)
+                .filter(user -> passwordEncoder.matches(request.password(), user.getHashedPassword()))
+                .map(user -> {
+                    String token = jwtUtil.generateToken(emailKey);
+                    return ResponseEntity.ok((Object) new AuthResponse(token, toDto(user)));
+                })
+                .orElse(ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body("Invalid email or password"));
     }
 
     @PostMapping("/register")
@@ -68,27 +56,47 @@ public class AuthController {
                     .body("First name, last name, email, and password are required");
         }
 
+        if (request.password().length() < 6) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body("Password must be at least 6 characters");
+        }
+
         String emailKey = request.email().toLowerCase().trim();
-        if (users.containsKey(emailKey)) {
+        if (userRepository.existsByEmail(emailKey)) {
             return ResponseEntity.status(HttpStatus.CONFLICT)
                     .body("Email is already registered");
         }
 
-        // Mock registration logic
-        UserDto user = new UserDto(
-                System.currentTimeMillis(),
-                request.firstName() + " " + request.lastName(),
-                request.email(),
-                "Legal Counsel",
-                "Self Employed",
-                null
-        );
-        
-        users.put(emailKey, new RegisteredUser(user, request.password()));
+        String hashedPassword = passwordEncoder.encode(request.password());
+        String fullName = request.firstName().trim() + " " + request.lastName().trim();
 
-        String token = "mock_jwt_token_" + System.currentTimeMillis();
-        return ResponseEntity.ok(new AuthResponse(token, user));
+        UserEntity entity = new UserEntity(fullName, emailKey, hashedPassword, "Legal Counsel", "Self Employed");
+        entity = userRepository.save(entity);
+
+        String token = jwtUtil.generateToken(emailKey);
+        return ResponseEntity.ok(new AuthResponse(token, toDto(entity)));
+    }
+
+    @GetMapping("/me")
+    public ResponseEntity<?> getCurrentUser(Authentication authentication) {
+        if (authentication == null || authentication.getPrincipal() == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Not authenticated");
+        }
+
+        String email = (String) authentication.getPrincipal();
+        return userRepository.findByEmail(email)
+                .map(user -> ResponseEntity.ok((Object) toDto(user)))
+                .orElse(ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found"));
+    }
+
+    private UserDto toDto(UserEntity entity) {
+        return new UserDto(
+                entity.getId(),
+                entity.getName(),
+                entity.getEmail(),
+                entity.getRole(),
+                entity.getCompany(),
+                entity.getAvatar()
+        );
     }
 }
-
-

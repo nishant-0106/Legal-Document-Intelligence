@@ -3,10 +3,18 @@ import { Send } from 'lucide-react'
 import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { useChat } from '@/hooks/useChat'
-import { suggestedQuestions } from '@/lib/mocks'
+import { useDocuments } from '@/hooks/useDocuments'
+
+const suggestedQuestions = [
+  'What are the key risks in this contract?',
+  'Are there any termination clauses?',
+  'What are the payment terms?',
+  'Is there an auto-renewal clause?',
+]
 
 export function ChatPage() {
   const { messages, isLoading, sendMessage } = useChat()
+  const { documents } = useDocuments()
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
 
@@ -28,25 +36,33 @@ export function ChatPage() {
     }
   }
 
+  const activeDoc = documents.length > 0 ? documents[0] : null
+
   return (
     <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 h-[calc(100vh-160px)]">
       {/* Sidebar */}
       <div className="hidden lg:block lg:col-span-1 space-y-4">
         <Card>
           <h3 className="text-sm font-bold mb-3">Active Document</h3>
-          <div className="flex items-center gap-2 p-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
-            <span>📄</span>
-            <div>
-              <div className="text-xs font-semibold">Service Agreement Q4</div>
-              <div className="text-xs text-gray-500 dark:text-gray-400">24 pages</div>
+          {activeDoc ? (
+            <div className="flex items-center gap-2 p-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+              <span>📄</span>
+              <div>
+                <div className="text-xs font-semibold">{activeDoc.name}</div>
+                <div className="text-xs text-gray-500 dark:text-gray-400">{activeDoc.pages} pages</div>
+              </div>
             </div>
-          </div>
+          ) : (
+            <div className="p-3 text-center text-xs text-gray-500 dark:text-gray-400 border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-lg">
+              No document loaded. Upload one to get started.
+            </div>
+          )}
         </Card>
 
         <Card>
           <h3 className="text-sm font-bold mb-3">Suggested Questions</h3>
           <div className="space-y-2">
-            {suggestedQuestions.slice(0, 4).map((q, i) => (
+            {suggestedQuestions.map((q, i) => (
               <button
                 key={i}
                 onClick={() => handleSuggestedQuestion(q)}

@@ -49,7 +49,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       showToast(`Welcome back, ${u.name.split(' ')[0]}!`, 'success')
       navigate('/dashboard')
     } catch (err: unknown) {
-      showToast(err instanceof Error ? err.message : 'Login failed', 'error')
+      const msg =
+        (err as any)?.response?.data ||
+        (err instanceof Error ? err.message : 'Login failed')
+      showToast(typeof msg === 'string' ? msg : 'Login failed', 'error')
     } finally {
       setLoading(false)
     }
@@ -65,7 +68,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       showToast('Account created! Welcome to LexIntel AI.', 'success')
       navigate('/dashboard')
     } catch (err: unknown) {
-      showToast(err instanceof Error ? err.message : 'Registration failed', 'error')
+      const msg =
+        (err as any)?.response?.data ||
+        (err instanceof Error ? err.message : 'Registration failed')
+      showToast(typeof msg === 'string' ? msg : 'Registration failed', 'error')
     } finally {
       setLoading(false)
     }

@@ -6,8 +6,8 @@ import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 
 export function LoginPage() {
-  const [email, setEmail]       = useState('demo@lexintel.ai')
-  const [password, setPassword] = useState('demo123')
+  const [email, setEmail]       = useState('')
+  const [password, setPassword] = useState('')
   const { login, isLoading }    = useAuth()
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -82,12 +82,7 @@ export function LoginPage() {
             Sign in to access your contracts and analysis
           </p>
 
-          <div className="mb-6 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
-            <div className="text-xs font-semibold text-blue-900 dark:text-blue-200">Demo Mode</div>
-            <div className="text-xs text-blue-700 dark:text-blue-300 mt-1">
-              Use demo@lexintel.ai / demo123, or register a new account.
-            </div>
-          </div>
+
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <Input

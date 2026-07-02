@@ -6,7 +6,6 @@ import { useAuth } from '@/context/AuthContext'
 import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
-import { dashboardStats, recentActivity } from '@/lib/mocks'
 
 export function DashboardPage() {
   const { user } = useAuth()
@@ -16,6 +15,53 @@ export function DashboardPage() {
   useEffect(() => {
     fetchAll()
   }, [fetchAll])
+
+  // Compute stats dynamically from real documents
+  const totalDocs = documents.length
+  const analyzedDocs = documents.filter((d) => d.risk > 0).length
+  const highRiskDocs = documents.filter((d) => d.risk >= 70).length
+  const avgRisk = totalDocs > 0
+    ? Math.round(documents.reduce((sum, d) => sum + d.risk, 0) / totalDocs)
+    : 0
+
+  const dashboardStats = [
+    {
+      label: 'Total Documents',
+      value: String(totalDocs),
+      change: totalDocs > 0 ? `${totalDocs} uploaded` : 'No documents yet',
+      trend: 'up' as const,
+      icon: '📄',
+      color: '#E6F1FB',
+      iconColor: '#185FA5',
+    },
+    {
+      label: 'Analyses Run',
+      value: String(analyzedDocs),
+      change: analyzedDocs > 0 ? `${analyzedDocs} analyzed` : 'None yet',
+      trend: 'up' as const,
+      icon: '⚙️',
+      color: '#E1F5EE',
+      iconColor: '#0F6E56',
+    },
+    {
+      label: 'Risk Alerts',
+      value: String(highRiskDocs),
+      change: highRiskDocs > 0 ? `${highRiskDocs} high-risk` : 'No alerts',
+      trend: 'down' as const,
+      icon: '⚠️',
+      color: '#FCEBEB',
+      iconColor: '#A32D2D',
+    },
+    {
+      label: 'Avg. Risk Score',
+      value: String(avgRisk),
+      change: totalDocs > 0 ? `Across ${totalDocs} docs` : 'N/A',
+      trend: 'up' as const,
+      icon: '🛡️',
+      color: '#FAEEDA',
+      iconColor: '#854F0B',
+    },
+  ]
 
   // Get risk level color helper
   const getRiskBadgeVariant = (score: number) => {
@@ -128,20 +174,28 @@ export function DashboardPage() {
               <Clock size={18} className="text-gray-500" />
               Recent Activity
             </h2>
-            <div className="space-y-4">
-              {recentActivity.map((activity) => (
-                <div key={activity.id} className="flex gap-3 text-sm">
-                  <div className="w-2 h-2 rounded-full bg-brand-600 mt-2 flex-shrink-0" />
-                  <div>
-                    <div className="text-gray-800 dark:text-gray-200">
-                      <span className="font-semibold">{activity.user}</span>: {activity.action}{' '}
-                      <span className="font-medium text-gray-900 dark:text-white">“{activity.document}”</span>
+            {documents.length === 0 ? (
+              <div className="text-center py-8">
+                <Clock size={32} className="mx-auto text-gray-300 dark:text-gray-600 mb-3" />
+                <p className="text-sm text-gray-500 dark:text-gray-400">No activity yet</p>
+                <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">Upload a document to get started</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {documents.slice(0, 5).map((doc) => (
+                  <div key={doc.id} className="flex gap-3 text-sm">
+                    <div className="w-2 h-2 rounded-full bg-brand-600 mt-2 flex-shrink-0" />
+                    <div>
+                      <div className="text-gray-800 dark:text-gray-200">
+                        <span className="font-semibold">{user?.name.split(' ')[0]}</span>: uploaded{' '}
+                        <span className="font-medium text-gray-900 dark:text-white">"{doc.name}"</span>
+                      </div>
+                      <div className="text-xs text-gray-500 mt-0.5">{doc.date}</div>
                     </div>
-                    <div className="text-xs text-gray-500 mt-0.5">{activity.time}</div>
                   </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </Card>
 
           {/* Quick Actions */}

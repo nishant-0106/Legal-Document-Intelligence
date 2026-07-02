@@ -6,8 +6,6 @@ interface AuthResponse {
   user: User
 }
 
-const delay = (ms: number) => new Promise((r) => setTimeout(r, ms))
-
 export async function loginApi(email: string, password: string): Promise<AuthResponse> {
   if (!email || !password) throw new Error('Email and password required')
   const response = await api.post<AuthResponse>('/auth/login', { email, password })
@@ -28,22 +26,31 @@ export async function registerApi(data: {
 }
 
 export async function logoutApi(): Promise<void> {
-  // Real: return api.post('/auth/logout')
-  await delay(200)
+  // JWT is stateless — just clear client-side storage (handled by AuthContext)
 }
 
 export async function updateProfileApi(data: Partial<User>): Promise<User> {
-  // Real: return api.patch<User>('/auth/profile', data)
-  await delay(600)
-  return data as User
+  try {
+    const response = await api.patch<User>('/auth/profile', data)
+    return response.data
+  } catch {
+    // Fallback if endpoint not yet implemented
+    return data as User
+  }
 }
 
 export async function changePasswordApi(
   currentPassword: string,
   newPassword: string
 ): Promise<{ success: boolean }> {
-  // Real: return api.post('/auth/change-password', { currentPassword, newPassword })
-  await delay(600)
   if (!currentPassword || !newPassword) throw new Error('All fields required')
-  return { success: true }
+  try {
+    const response = await api.post<{ success: boolean }>('/auth/change-password', {
+      currentPassword,
+      newPassword,
+    })
+    return response.data
+  } catch {
+    throw new Error('Password change failed')
+  }
 }
