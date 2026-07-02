@@ -7,7 +7,7 @@ import { useAuth } from '@/context/AuthContext'
 
 const navItems = [
   { path: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { path: '/upload', label: 'Upload Document', icon: Upload },
+  { path: '/upload', label: 'Documents', icon: Upload },
   { path: '/analysis', label: 'Analysis', icon: FileText },
   { path: '/chat', label: 'AI Legal Chat', icon: MessageSquare, badge: 3 },
   { path: '/compare', label: 'Compare Contracts', icon: GitCompare },

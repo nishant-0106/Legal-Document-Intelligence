@@ -4,7 +4,7 @@ import { Topbar } from './Topbar'
 
 const pageTitle: Record<string, string> = {
   '/dashboard': 'Dashboard',
-  '/upload': 'Upload Document',
+  '/upload': 'Documents',
   '/analysis': 'Contract Analysis',
   '/chat': 'AI Legal Chat',
   '/compare': 'Compare Contracts',

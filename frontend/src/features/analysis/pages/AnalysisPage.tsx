@@ -29,7 +29,7 @@ export function AnalysisPage() {
           >
             {documents.map((doc) => (
               <option key={doc.id} value={doc.id}>
-                {doc.name}
+                {doc.originalFileName}
               </option>
             ))}
           </select>

@@ -7,6 +7,54 @@ import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
 
+function formatFileSize(bytes: number): string {
+  if (bytes === 0) return '0 B'
+  const units = ['B', 'KB', 'MB', 'GB']
+  const i = Math.floor(Math.log(bytes) / Math.log(1024))
+  return `${(bytes / Math.pow(1024, i)).toFixed(i > 0 ? 1 : 0)} ${units[i]}`
+}
+
+function formatDate(iso: string): string {
+  try {
+    const date = new Date(iso)
+    return date.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+    })
+  } catch {
+    return iso
+  }
+}
+
+function timeAgo(iso: string): string {
+  try {
+    const now = Date.now()
+    const then = new Date(iso).getTime()
+    const diffMs = now - then
+    const diffMin = Math.floor(diffMs / 60000)
+    if (diffMin < 1) return 'Just now'
+    if (diffMin < 60) return `${diffMin}m ago`
+    const diffHr = Math.floor(diffMin / 60)
+    if (diffHr < 24) return `${diffHr}h ago`
+    const diffDay = Math.floor(diffHr / 24)
+    if (diffDay < 7) return `${diffDay}d ago`
+    return formatDate(iso)
+  } catch {
+    return iso
+  }
+}
+
+function getStatusBadgeVariant(status: string) {
+  switch (status) {
+    case 'UPLOADED': return 'blue'
+    case 'PROCESSING': return 'amber'
+    case 'ANALYZED': return 'green'
+    case 'ERROR': return 'red'
+    default: return 'gray' as const
+  }
+}
+
 export function DashboardPage() {
   const { user } = useAuth()
   const { documents, isLoading, fetchAll } = useDocuments()
@@ -18,11 +66,11 @@ export function DashboardPage() {
 
   // Compute stats dynamically from real documents
   const totalDocs = documents.length
-  const analyzedDocs = documents.filter((d) => d.risk > 0).length
-  const highRiskDocs = documents.filter((d) => d.risk >= 70).length
-  const avgRisk = totalDocs > 0
-    ? Math.round(documents.reduce((sum, d) => sum + d.risk, 0) / totalDocs)
-    : 0
+  const uploadedDocs = documents.filter((d) => d.status === 'UPLOADED').length
+  const analyzedDocs = documents.filter((d) => d.status === 'ANALYZED').length
+  const totalSizeMB = totalDocs > 0
+    ? (documents.reduce((sum, d) => sum + d.fileSize, 0) / (1024 * 1024)).toFixed(1)
+    : '0'
 
   const dashboardStats = [
     {
@@ -35,40 +83,33 @@ export function DashboardPage() {
       iconColor: '#185FA5',
     },
     {
-      label: 'Analyses Run',
-      value: String(analyzedDocs),
-      change: analyzedDocs > 0 ? `${analyzedDocs} analyzed` : 'None yet',
+      label: 'Pending Analysis',
+      value: String(uploadedDocs),
+      change: uploadedDocs > 0 ? `${uploadedDocs} awaiting` : 'None pending',
       trend: 'up' as const,
-      icon: '⚙️',
+      icon: '⏳',
       color: '#E1F5EE',
       iconColor: '#0F6E56',
     },
     {
-      label: 'Risk Alerts',
-      value: String(highRiskDocs),
-      change: highRiskDocs > 0 ? `${highRiskDocs} high-risk` : 'No alerts',
-      trend: 'down' as const,
-      icon: '⚠️',
-      color: '#FCEBEB',
-      iconColor: '#A32D2D',
-    },
-    {
-      label: 'Avg. Risk Score',
-      value: String(avgRisk),
-      change: totalDocs > 0 ? `Across ${totalDocs} docs` : 'N/A',
+      label: 'Analyzed',
+      value: String(analyzedDocs),
+      change: analyzedDocs > 0 ? `${analyzedDocs} completed` : 'None yet',
       trend: 'up' as const,
-      icon: '🛡️',
+      icon: '✅',
       color: '#FAEEDA',
       iconColor: '#854F0B',
     },
+    {
+      label: 'Storage Used',
+      value: `${totalSizeMB} MB`,
+      change: totalDocs > 0 ? `Across ${totalDocs} files` : 'N/A',
+      trend: 'up' as const,
+      icon: '💾',
+      color: '#FCEBEB',
+      iconColor: '#A32D2D',
+    },
   ]
-
-  // Get risk level color helper
-  const getRiskBadgeVariant = (score: number) => {
-    if (score >= 70) return 'red'
-    if (score >= 40) return 'amber'
-    return 'green'
-  };
 
   return (
     <div className="space-y-6">
@@ -77,7 +118,7 @@ export function DashboardPage() {
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Welcome back, {user?.name.split(' ')[0]}!</h1>
           <p className="text-gray-600 dark:text-gray-400 mt-1">
-            Here's the summary of your legal documents and risk analyses.
+            Here's the summary of your legal documents.
           </p>
         </div>
         <Button variant="primary" onClick={() => navigate('/upload')}>
@@ -99,7 +140,7 @@ export function DashboardPage() {
               <div className="text-xs font-semibold text-gray-500 uppercase tracking-wider">{stat.label}</div>
               <div className="text-2xl font-bold mt-0.5">{stat.value}</div>
               <div className="text-xs text-gray-500 mt-1 flex items-center gap-1">
-                <span className={stat.trend === 'up' && stat.label.includes('Risk') ? 'text-red-500 font-medium' : 'text-emerald-500 font-medium'}>
+                <span className="text-emerald-500 font-medium">
                   {stat.change}
                 </span>
               </div>
@@ -139,24 +180,24 @@ export function DashboardPage() {
                 {documents.slice(0, 5).map((doc) => (
                   <div key={doc.id} className="py-3 flex items-center justify-between first:pt-0 last:pb-0 hover:bg-gray-50/50 dark:hover:bg-gray-800/10 px-2 rounded-lg transition-colors">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-lg bg-blue-50 dark:bg-blue-900/10 flex items-center justify-center text-blue-600 dark:text-blue-400">
+                      <div className="w-10 h-10 rounded-lg bg-red-50 dark:bg-red-900/10 flex items-center justify-center text-red-500 dark:text-red-400">
                         <FileText size={20} />
                       </div>
                       <div>
-                        <div className="font-semibold text-sm">{doc.name}</div>
+                        <div className="font-semibold text-sm truncate max-w-[240px]">{doc.originalFileName}</div>
                         <div className="text-xs text-gray-500 flex gap-2 mt-0.5">
-                          <span>{doc.date}</span>
+                          <span>{formatDate(doc.uploadedAt)}</span>
                           <span>•</span>
-                          <span>{doc.pages} pages</span>
+                          <span>{formatFileSize(doc.fileSize)}</span>
                         </div>
                       </div>
                     </div>
                     <div className="flex items-center gap-3">
-                      <Badge variant={getRiskBadgeVariant(doc.risk)}>
-                        {doc.risk}% Risk
+                      <Badge variant={getStatusBadgeVariant(doc.status) as any}>
+                        {doc.status}
                       </Badge>
-                      <Button variant="outline" size="sm" onClick={() => navigate('/analysis')}>
-                        Analyze
+                      <Button variant="outline" size="sm" onClick={() => navigate('/upload')}>
+                        Manage
                       </Button>
                     </div>
                   </div>
@@ -188,9 +229,9 @@ export function DashboardPage() {
                     <div>
                       <div className="text-gray-800 dark:text-gray-200">
                         <span className="font-semibold">{user?.name.split(' ')[0]}</span>: uploaded{' '}
-                        <span className="font-medium text-gray-900 dark:text-white">"{doc.name}"</span>
+                        <span className="font-medium text-gray-900 dark:text-white">"{doc.originalFileName}"</span>
                       </div>
-                      <div className="text-xs text-gray-500 mt-0.5">{doc.date}</div>
+                      <div className="text-xs text-gray-500 mt-0.5">{timeAgo(doc.uploadedAt)}</div>
                     </div>
                   </div>
                 ))}
@@ -211,7 +252,7 @@ export function DashboardPage() {
               className="bg-white text-brand-900 hover:bg-brand-50 border-none font-semibold text-xs py-2 px-4 rounded-lg flex items-center gap-2"
               onClick={() => navigate('/upload')}
             >
-              Analyze New Contract <ArrowRight size={14} />
+              Upload New Contract <ArrowRight size={14} />
             </Button>
           </Card>
         </div>

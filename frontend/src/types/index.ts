@@ -14,26 +14,20 @@ export interface AuthTokens {
 }
 
 // ─── Documents ───────────────────────────────────────────────────────────────
-export type RiskLevel = 'low' | 'medium' | 'high'
-export type FileType  = 'pdf' | 'docx' | 'doc' | 'txt'
+export type DocumentStatus = 'UPLOADED' | 'PROCESSING' | 'ANALYZED' | 'ERROR'
 
 export interface Document {
   id: number
-  name: string
-  size: string
-  pages: number
-  date: string
-  type: FileType
-  risk: number               // 0–100
-  status: string
-  parties: string[]
-  effectiveDate: string
-  governingLaw: string
-  value: string
-  category: string
+  originalFileName: string
+  fileSize: number              // bytes
+  contentType: string
+  status: DocumentStatus
+  uploadedAt: string            // ISO datetime from backend
 }
 
-// ─── Analysis ────────────────────────────────────────────────────────────────
+// ─── Analysis (future phase) ─────────────────────────────────────────────────
+export type RiskLevel = 'low' | 'medium' | 'high'
+
 export interface Clause {
   id: number
   title: string

@@ -34,9 +34,9 @@ export function ComparePage() {
                   <div className="flex items-start gap-3 mb-4">
                     <span className="text-2xl">📄</span>
                     <div className="flex-1">
-                      <div className="font-semibold">{documents.find((d) => d.id === selected[idx])?.name}</div>
+                      <div className="font-semibold">{documents.find((d) => d.id === selected[idx])?.originalFileName}</div>
                       <div className="text-sm text-gray-600 dark:text-gray-400">
-                        {documents.find((d) => d.id === selected[idx])?.pages} pages
+                        {documents.find((d) => d.id === selected[idx])?.status}
                       </div>
                     </div>
                   </div>
@@ -68,7 +68,7 @@ export function ComparePage() {
                     <option value="">Select a document...</option>
                     {documents.map((d) => (
                       <option key={d.id} value={d.id}>
-                        {d.name}
+                        {d.originalFileName}
                       </option>
                     ))}
                   </select>
@@ -103,22 +103,22 @@ export function ComparePage() {
                             cy="60"
                             r="50"
                             fill="none"
-                            stroke={doc!.risk > 70 ? '#EF4444' : doc!.risk > 40 ? '#F59E0B' : '#10B981'}
+                            stroke="#9CA3AF"
                             strokeWidth="10"
-                            strokeDasharray={`${((doc!.risk / 100) * 314).toFixed(1)} 314`}
+                            strokeDasharray="0 314"
                             strokeLinecap="round"
                           />
                         </svg>
                         <div className="absolute inset-0 flex items-center justify-center">
-                          <span className="font-bold text-lg">{doc!.risk}</span>
+                          <span className="font-bold text-lg">—</span>
                         </div>
                       </div>
-                      <div className="font-semibold">{doc!.name}</div>
+                      <div className="font-semibold">{doc!.originalFileName}</div>
                       <Badge
-                        variant={doc!.risk > 70 ? 'red' : doc!.risk > 40 ? 'amber' : 'green'}
+                        variant={doc!.status === 'ANALYZED' ? 'green' : 'blue'}
                         className="mt-2"
                       >
-                        {doc!.risk > 70 ? 'High Risk' : doc!.risk > 40 ? 'Medium' : 'Low'}
+                        {doc!.status}
                       </Badge>
                     </div>
                   </Card>

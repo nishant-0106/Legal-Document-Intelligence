@@ -64,7 +64,10 @@ export function useDocuments() {
         showToast('Document uploaded successfully', 'success')
         return doc
       } catch (err) {
-        const error = err instanceof Error ? err : new Error('Upload failed')
+        const msg =
+          (err as any)?.response?.data?.message ||
+          (err instanceof Error ? err.message : 'Upload failed')
+        const error = new Error(typeof msg === 'string' ? msg : 'Upload failed')
         setState((s) => ({ ...s, error, isLoading: false }))
         showToast(error.message, 'error')
         throw error
@@ -84,8 +87,10 @@ export function useDocuments() {
         }))
         showToast('Document deleted', 'success')
       } catch (err) {
-        const error = err instanceof Error ? err : new Error('Delete failed')
-        showToast(error.message, 'error')
+        const msg =
+          (err as any)?.response?.data?.message ||
+          (err instanceof Error ? err.message : 'Delete failed')
+        showToast(typeof msg === 'string' ? msg : 'Delete failed', 'error')
       }
     },
     [showToast]

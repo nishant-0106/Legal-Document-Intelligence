@@ -48,8 +48,8 @@ export function ChatPage() {
             <div className="flex items-center gap-2 p-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
               <span>📄</span>
               <div>
-                <div className="text-xs font-semibold">{activeDoc.name}</div>
-                <div className="text-xs text-gray-500 dark:text-gray-400">{activeDoc.pages} pages</div>
+                <div className="text-xs font-semibold">{activeDoc.originalFileName}</div>
+                <div className="text-xs text-gray-500 dark:text-gray-400">{activeDoc.status}</div>
               </div>
             </div>
           ) : (
