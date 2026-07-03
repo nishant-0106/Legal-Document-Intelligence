@@ -1,6 +1,8 @@
 package com.lexintel.api.controller;
 
 import com.lexintel.api.dto.DocumentDto;
+import com.lexintel.api.dto.DocumentMetadataResponse;
+import com.lexintel.api.dto.DocumentTextResponse;
 import com.lexintel.api.dto.DocumentUploadResponse;
 import com.lexintel.api.service.DocumentService;
 import org.slf4j.Logger;
@@ -33,6 +35,8 @@ public class DocumentController {
 
     /**
      * Upload a PDF document.
+     * After a successful upload the response already contains processingStatus
+     * and extracted fields because processing runs synchronously in this phase.
      */
     @PostMapping("/upload")
     public ResponseEntity<DocumentUploadResponse> upload(
@@ -105,5 +109,33 @@ public class DocumentController {
                 .contentType(MediaType.parseMediaType(contentType != null ? contentType : "application/pdf"))
                 .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + resource.getFilename() + "\"")
                 .body(resource);
+    }
+
+    /**
+     * Get only the extracted text for a document.
+     * Useful for AI analysis phase — returns processingStatus so callers know
+     * whether extraction has completed.
+     */
+    @GetMapping("/{id}/text")
+    public ResponseEntity<DocumentTextResponse> getText(
+            @PathVariable Long id,
+            Authentication authentication) {
+
+        String email = (String) authentication.getPrincipal();
+        DocumentTextResponse response = documentService.getTextByIdAndUser(id, email);
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * Get PDF metadata (page count, title, author, creation date) without the full text.
+     */
+    @GetMapping("/{id}/metadata")
+    public ResponseEntity<DocumentMetadataResponse> getMetadata(
+            @PathVariable Long id,
+            Authentication authentication) {
+
+        String email = (String) authentication.getPrincipal();
+        DocumentMetadataResponse response = documentService.getMetadataByIdAndUser(id, email);
+        return ResponseEntity.ok(response);
     }
 }

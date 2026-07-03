@@ -23,11 +23,31 @@ public class DocumentEntity {
     @Column(nullable = false)
     private String contentType;
 
+    /** Upload-level status — kept for backward compatibility. */
     @Column(nullable = false)
     private String status;
 
+    /** Processing pipeline status: UPLOADED | PROCESSING | PROCESSED | FAILED */
+    @Column(nullable = false)
+    private String processingStatus = "UPLOADED";
+
     @Column(nullable = false, updatable = false)
     private LocalDateTime uploadedAt;
+
+    // ─── PDF extraction fields (nullable until processing completes) ──────────
+
+    @Column(columnDefinition = "TEXT")
+    private String extractedText;
+
+    private Integer pageCount;
+
+    private String pdfTitle;
+
+    private String pdfAuthor;
+
+    private String pdfCreationDate;
+
+    private LocalDateTime processedAt;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
@@ -39,11 +59,12 @@ public class DocumentEntity {
                           Long fileSize, String contentType,
                           String status, UserEntity user) {
         this.originalFileName = originalFileName;
-        this.storedFileName = storedFileName;
-        this.fileSize = fileSize;
-        this.contentType = contentType;
-        this.status = status;
-        this.user = user;
+        this.storedFileName   = storedFileName;
+        this.fileSize         = fileSize;
+        this.contentType      = contentType;
+        this.status           = status;
+        this.processingStatus = "UPLOADED";
+        this.user             = user;
     }
 
     @PrePersist
@@ -71,8 +92,29 @@ public class DocumentEntity {
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }
 
+    public String getProcessingStatus() { return processingStatus; }
+    public void setProcessingStatus(String processingStatus) { this.processingStatus = processingStatus; }
+
     public LocalDateTime getUploadedAt() { return uploadedAt; }
     public void setUploadedAt(LocalDateTime uploadedAt) { this.uploadedAt = uploadedAt; }
+
+    public String getExtractedText() { return extractedText; }
+    public void setExtractedText(String extractedText) { this.extractedText = extractedText; }
+
+    public Integer getPageCount() { return pageCount; }
+    public void setPageCount(Integer pageCount) { this.pageCount = pageCount; }
+
+    public String getPdfTitle() { return pdfTitle; }
+    public void setPdfTitle(String pdfTitle) { this.pdfTitle = pdfTitle; }
+
+    public String getPdfAuthor() { return pdfAuthor; }
+    public void setPdfAuthor(String pdfAuthor) { this.pdfAuthor = pdfAuthor; }
+
+    public String getPdfCreationDate() { return pdfCreationDate; }
+    public void setPdfCreationDate(String pdfCreationDate) { this.pdfCreationDate = pdfCreationDate; }
+
+    public LocalDateTime getProcessedAt() { return processedAt; }
+    public void setProcessedAt(LocalDateTime processedAt) { this.processedAt = processedAt; }
 
     public UserEntity getUser() { return user; }
     public void setUser(UserEntity user) { this.user = user; }

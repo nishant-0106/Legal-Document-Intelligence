@@ -1,5 +1,5 @@
 import { api } from '../axios'
-import type { Document, Analysis } from '@/types'
+import type { Document, Analysis, DocumentText, DocumentMetadata } from '@/types'
 
 // ─── Document API ────────────────────────────────────────────────────────────
 
@@ -48,6 +48,25 @@ export async function deleteDocumentApi(id: number): Promise<{ success: boolean 
 export function getDocumentDownloadUrl(id: number): string {
   const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:8080/api/v1'
   return `${baseUrl}/documents/${id}/download`
+}
+
+// ─── PDF Processing API ───────────────────────────────────────────────────────
+
+/**
+ * Fetch only the extracted text for a document.
+ * Returns processingStatus so the caller can determine if extraction has finished.
+ */
+export async function getDocumentTextApi(id: number): Promise<DocumentText> {
+  const response = await api.get<DocumentText>(`/documents/${id}/text`)
+  return response.data
+}
+
+/**
+ * Fetch PDF metadata (page count, title, author, creation date) without the full text.
+ */
+export async function getDocumentMetadataApi(id: number): Promise<DocumentMetadata> {
+  const response = await api.get<DocumentMetadata>(`/documents/${id}/metadata`)
+  return response.data
 }
 
 // ─── Analysis API (future phase — stubs) ─────────────────────────────────────

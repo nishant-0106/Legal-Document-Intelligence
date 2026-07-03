@@ -16,6 +16,9 @@ export interface AuthTokens {
 // ─── Documents ───────────────────────────────────────────────────────────────
 export type DocumentStatus = 'UPLOADED' | 'PROCESSING' | 'ANALYZED' | 'ERROR'
 
+/** Processing pipeline status returned after PDF extraction. */
+export type ProcessingStatus = 'UPLOADED' | 'PROCESSING' | 'PROCESSED' | 'FAILED'
+
 export interface Document {
   id: number
   originalFileName: string
@@ -23,6 +26,33 @@ export interface Document {
   contentType: string
   status: DocumentStatus
   uploadedAt: string            // ISO datetime from backend
+
+  // ─── PDF processing fields (populated after extraction) ───────────────────
+  processingStatus?: ProcessingStatus
+  pageCount?: number
+  pdfTitle?: string
+  pdfAuthor?: string
+  pdfCreationDate?: string
+  extractedText?: string
+  processedAt?: string          // ISO datetime
+}
+
+/** Response from GET /api/v1/documents/{id}/text */
+export interface DocumentText {
+  documentId: number
+  processingStatus: ProcessingStatus
+  extractedText: string | null
+}
+
+/** Response from GET /api/v1/documents/{id}/metadata */
+export interface DocumentMetadata {
+  documentId: number
+  processingStatus: ProcessingStatus
+  pageCount: number | null
+  pdfTitle: string | null
+  pdfAuthor: string | null
+  pdfCreationDate: string | null
+  processedAt: string | null
 }
 
 // ─── Analysis (future phase) ─────────────────────────────────────────────────

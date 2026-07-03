@@ -1,5 +1,6 @@
 import { useState, useRef, useCallback } from 'react'
-import { Upload as UploadIcon, File, Trash2, Eye, FileText, AlertCircle } from 'lucide-react'
+import { Upload as UploadIcon, File, Trash2, Eye, FileText, AlertCircle, Info } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
 import { Card } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
@@ -39,8 +40,12 @@ function getStatusBadge(status: string) {
       return <Badge variant="blue">Uploaded</Badge>
     case 'PROCESSING':
       return <Badge variant="amber">Processing</Badge>
+    case 'PROCESSED':
+      return <Badge variant="green">Processed</Badge>
     case 'ANALYZED':
       return <Badge variant="green">Analyzed</Badge>
+    case 'FAILED':
+      return <Badge variant="red">Failed</Badge>
     case 'ERROR':
       return <Badge variant="red">Error</Badge>
     default:
@@ -55,6 +60,7 @@ export function UploadPage() {
   const [deletingId, setDeletingId] = useState<number | null>(null)
   const { documents, isLoading, upload, remove } = useDocuments()
   const { showToast } = useToast()
+  const navigate = useNavigate()
 
   const validateAndUpload = useCallback(async (file: File) => {
     // Client-side validation
@@ -324,6 +330,14 @@ export function UploadPage() {
                     </td>
                     <td className="py-3.5 px-5">
                       <div className="flex items-center justify-end gap-1.5">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => navigate(`/documents/${doc.id}`)}
+                          title="View extracted text & metadata"
+                        >
+                          <Info size={15} className="mr-1" /> Details
+                        </Button>
                         <Button
                           variant="ghost"
                           size="sm"

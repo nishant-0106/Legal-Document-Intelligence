@@ -1,6 +1,8 @@
 package com.lexintel.api.service;
 
 import com.lexintel.api.dto.DocumentDto;
+import com.lexintel.api.dto.DocumentMetadataResponse;
+import com.lexintel.api.dto.DocumentTextResponse;
 import com.lexintel.api.entity.DocumentEntity;
 import com.lexintel.api.entity.UserEntity;
 import com.lexintel.api.exception.DocumentNotFoundException;
@@ -25,20 +27,24 @@ public class DocumentService {
     private static final String ALLOWED_CONTENT_TYPE = "application/pdf";
     private static final long MAX_FILE_SIZE = 20 * 1024 * 1024; // 20 MB
 
-    private final DocumentRepository documentRepository;
-    private final UserRepository userRepository;
-    private final FileStorageService fileStorageService;
+    private final DocumentRepository        documentRepository;
+    private final UserRepository            userRepository;
+    private final FileStorageService        fileStorageService;
+    private final DocumentProcessingService documentProcessingService;
 
     public DocumentService(DocumentRepository documentRepository,
                            UserRepository userRepository,
-                           FileStorageService fileStorageService) {
-        this.documentRepository = documentRepository;
-        this.userRepository = userRepository;
-        this.fileStorageService = fileStorageService;
+                           FileStorageService fileStorageService,
+                           DocumentProcessingService documentProcessingService) {
+        this.documentRepository        = documentRepository;
+        this.userRepository            = userRepository;
+        this.fileStorageService        = fileStorageService;
+        this.documentProcessingService = documentProcessingService;
     }
 
     /**
-     * Upload a new PDF document for the authenticated user.
+     * Upload a new PDF document for the authenticated user, then trigger
+     * PDF text and metadata extraction automatically.
      */
     @Transactional
     public DocumentDto upload(MultipartFile file, String userEmail) {
@@ -74,6 +80,14 @@ public class DocumentService {
 
         log.info("Document uploaded: '{}' by user '{}' (id={})",
                 originalFileName, userEmail, entity.getId());
+
+        // Trigger PDF processing — runs synchronously in this phase.
+        // To make it async in the next milestone, simply add @Async to
+        // DocumentProcessingService.process() and @EnableAsync on the application class.
+        documentProcessingService.process(entity.getId());
+
+        // Re-fetch after processing so the returned DTO reflects extraction results
+        entity = documentRepository.findById(entity.getId()).orElse(entity);
 
         return toDto(entity);
     }
@@ -157,6 +171,48 @@ public class DocumentService {
         return entity.getContentType();
     }
 
+    /**
+     * Returns the extracted text for a document.
+     * Used by GET /api/v1/documents/{id}/text
+     */
+    @Transactional(readOnly = true)
+    public DocumentTextResponse getTextByIdAndUser(Long documentId, String userEmail) {
+        UserEntity user = userRepository.findByEmail(userEmail)
+                .orElseThrow(() -> new RuntimeException("User not found: " + userEmail));
+
+        DocumentEntity entity = documentRepository.findByIdAndUserId(documentId, user.getId())
+                .orElseThrow(() -> new DocumentNotFoundException(documentId));
+
+        return new DocumentTextResponse(
+                entity.getId(),
+                entity.getProcessingStatus(),
+                entity.getExtractedText()
+        );
+    }
+
+    /**
+     * Returns PDF metadata (no extracted text) for a document.
+     * Used by GET /api/v1/documents/{id}/metadata
+     */
+    @Transactional(readOnly = true)
+    public DocumentMetadataResponse getMetadataByIdAndUser(Long documentId, String userEmail) {
+        UserEntity user = userRepository.findByEmail(userEmail)
+                .orElseThrow(() -> new RuntimeException("User not found: " + userEmail));
+
+        DocumentEntity entity = documentRepository.findByIdAndUserId(documentId, user.getId())
+                .orElseThrow(() -> new DocumentNotFoundException(documentId));
+
+        return new DocumentMetadataResponse(
+                entity.getId(),
+                entity.getProcessingStatus(),
+                entity.getPageCount(),
+                entity.getPdfTitle(),
+                entity.getPdfAuthor(),
+                entity.getPdfCreationDate(),
+                entity.getProcessedAt()
+        );
+    }
+
     // ─── Private helpers ─────────────────────────────────────────────────────
 
     private void validateFile(MultipartFile file) {
@@ -189,7 +245,14 @@ public class DocumentService {
                 entity.getFileSize(),
                 entity.getContentType(),
                 entity.getStatus(),
-                entity.getUploadedAt()
+                entity.getUploadedAt(),
+                entity.getProcessingStatus(),
+                entity.getPageCount(),
+                entity.getPdfTitle(),
+                entity.getPdfAuthor(),
+                entity.getPdfCreationDate(),
+                entity.getExtractedText(),
+                entity.getProcessedAt()
         );
     }
 }

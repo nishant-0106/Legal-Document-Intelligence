@@ -14,6 +14,7 @@ import { RegisterPage } from '@/features/auth/pages/RegisterPage'
 // App pages
 import { DashboardPage } from '@/features/dashboard/pages/DashboardPage'
 import { UploadPage } from '@/features/upload/pages/UploadPage'
+import { DocumentDetailPage } from '@/features/upload/pages/DocumentDetailPage'
 import { AnalysisPage } from '@/features/analysis/pages/AnalysisPage'
 import { ChatPage } from '@/features/chat/pages/ChatPage'
 import { ComparePage } from '@/features/compare/pages/ComparePage'
@@ -54,6 +55,7 @@ function App() {
               >
                 <Route path="/dashboard" element={<DashboardPage />} />
                 <Route path="/upload" element={<UploadPage />} />
+                <Route path="/documents/:id" element={<DocumentDetailPage />} />
                 <Route path="/analysis" element={<AnalysisPage />} />
                 <Route path="/chat" element={<ChatPage />} />
                 <Route path="/compare" element={<ComparePage />} />

@@ -49,7 +49,9 @@ function getStatusBadgeVariant(status: string) {
   switch (status) {
     case 'UPLOADED': return 'blue'
     case 'PROCESSING': return 'amber'
+    case 'PROCESSED': return 'green'
     case 'ANALYZED': return 'green'
+    case 'FAILED': return 'red'
     case 'ERROR': return 'red'
     default: return 'gray' as const
   }
@@ -66,8 +68,12 @@ export function DashboardPage() {
 
   // Compute stats dynamically from real documents
   const totalDocs = documents.length
-  const uploadedDocs = documents.filter((d) => d.status === 'UPLOADED').length
-  const analyzedDocs = documents.filter((d) => d.status === 'ANALYZED').length
+  const uploadedDocs = documents.filter(
+    (d) => d.processingStatus === 'UPLOADED' || d.processingStatus === 'PROCESSING' || d.status === 'UPLOADED'
+  ).length
+  const analyzedDocs = documents.filter(
+    (d) => d.processingStatus === 'PROCESSED' || d.status === 'ANALYZED'
+  ).length
   const totalSizeMB = totalDocs > 0
     ? (documents.reduce((sum, d) => sum + d.fileSize, 0) / (1024 * 1024)).toFixed(1)
     : '0'

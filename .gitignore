@@ -36,3 +36,6 @@ target/
 
 # H2 Database
 backend/data/
+
+# Uploaded documents
+uploads/
