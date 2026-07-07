@@ -69,10 +69,20 @@ export async function getDocumentMetadataApi(id: number): Promise<DocumentMetada
   return response.data
 }
 
-// ─── Analysis API (future phase — stubs) ─────────────────────────────────────
+// ─── Analysis API ────────────────────────────────────────────────────────────
 
 export async function analyzeDocumentApi(id: number): Promise<Analysis> {
   const response = await api.post<Analysis>(`/documents/${id}/analyze`)
+  return response.data
+}
+
+export async function getAnalysisApi(id: number): Promise<Analysis> {
+  const response = await api.get<Analysis>(`/documents/${id}/analysis`)
+  return response.data
+}
+
+export async function getAnalysisStatusApi(id: number): Promise<{ documentId: number; status: string }> {
+  const response = await api.get<{ documentId: number; status: string }>(`/documents/${id}/analysis/status`)
   return response.data
 }
 

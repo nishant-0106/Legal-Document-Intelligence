@@ -55,29 +55,27 @@ export interface DocumentMetadata {
   processedAt: string | null
 }
 
-// ─── Analysis (future phase) ─────────────────────────────────────────────────
-export type RiskLevel = 'low' | 'medium' | 'high'
-
-export interface Clause {
-  id: number
+// ─── Analysis ────────────────────────────────────────────────────────────────
+export interface KeyClause {
   title: string
-  risk: RiskLevel
-  section: string
-  text: string
-}
-
-export interface Recommendation {
-  type: RiskLevel
-  title: string
-  text: string
+  riskLevel: string
+  explanation: string
+  recommendation: string
 }
 
 export interface Analysis {
+  id: number
   documentId: number
-  riskScore: number
+  documentType: string
   summary: string
-  clauses: Clause[]
-  recommendations: Recommendation[]
+  riskScore: number
+  overallRisk: string
+  keyClauses: KeyClause[]
+  missingClauses: string[]
+  recommendations: string[]
+  importantDates: string[]
+  parties: string[]
+  analyzedAt: string
 }
 
 // ─── Chat ────────────────────────────────────────────────────────────────────

@@ -14,11 +14,13 @@ import {
   Calendar,
   Copy,
   Check,
+  Sparkles,
 } from 'lucide-react'
 import { Card } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
 import { useDocuments } from '@/hooks/useDocuments'
+import { useAnalysis } from '@/hooks/useAnalysis'
 import type { ProcessingStatus } from '@/types'
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -54,7 +56,15 @@ interface StatusConfig {
   description: string
 }
 
-function getStatusConfig(status: ProcessingStatus | string | undefined): StatusConfig {
+function getStatusConfig(status: ProcessingStatus | string | undefined, docStatus?: string): StatusConfig {
+  if (docStatus === 'ANALYZED') {
+    return {
+      label: 'Analyzed',
+      badgeVariant: 'green',
+      icon: <CheckCircle2 size={16} className="text-emerald-500" />,
+      description: 'Document has been successfully analyzed by LexIntel AI.',
+    }
+  }
   switch (status) {
     case 'PROCESSING':
       return {
@@ -152,6 +162,7 @@ export function DocumentDetailPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const { fetch, current, isLoading } = useDocuments()
+  const { analyze, isLoading: isAnalyzing } = useAnalysis()
 
   const documentId = id ? parseInt(id, 10) : null
 
@@ -160,6 +171,15 @@ export function DocumentDetailPage() {
       fetch(documentId)
     }
   }, [documentId, fetch])
+
+  const handleAnalyze = async (docId: number) => {
+    try {
+      await analyze(docId)
+      navigate(`/analysis?docId=${docId}`)
+    } catch {
+      // Error handled by hook
+    }
+  }
 
   // ── Loading state ─────────────────────────────────────────────────────────
   if (isLoading) {
@@ -202,7 +222,7 @@ export function DocumentDetailPage() {
   }
 
   const doc = current!
-  const statusConfig = getStatusConfig(doc.processingStatus)
+  const statusConfig = getStatusConfig(doc.processingStatus, doc.status)
   const hasText = doc.processingStatus === 'PROCESSED' && doc.extractedText
   const hasFailed = doc.processingStatus === 'FAILED'
   const isProcessing = doc.processingStatus === 'PROCESSING'
@@ -229,10 +249,34 @@ export function DocumentDetailPage() {
             </p>
           </div>
         </div>
-        <Badge variant={statusConfig.badgeVariant} className="flex items-center gap-1.5 self-start sm:self-auto">
-          {statusConfig.icon}
-          {statusConfig.label}
-        </Badge>
+        <div className="flex items-center gap-3 self-start sm:self-auto">
+          <Badge variant={statusConfig.badgeVariant} className="flex items-center gap-1.5">
+            {statusConfig.icon}
+            {statusConfig.label}
+          </Badge>
+
+          {doc.status === 'ANALYZED' ? (
+            <Button
+              variant="primary"
+              size="sm"
+              onClick={() => navigate(`/analysis?docId=${doc.id}`)}
+              className="gap-1.5"
+            >
+              <Sparkles size={14} /> View AI Analysis
+            </Button>
+          ) : hasText ? (
+            <Button
+              variant="primary"
+              size="sm"
+              onClick={() => handleAnalyze(doc.id)}
+              disabled={isAnalyzing}
+              isLoading={isAnalyzing}
+              className="gap-1.5 bg-gradient-to-r from-brand-600 to-indigo-600 border-none"
+            >
+              <Sparkles size={14} /> Analyze Document
+            </Button>
+          ) : null}
+        </div>
       </div>
 
       {/* Processing status banner */}

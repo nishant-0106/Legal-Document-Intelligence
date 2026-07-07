@@ -31,15 +31,18 @@ public class DocumentService {
     private final UserRepository            userRepository;
     private final FileStorageService        fileStorageService;
     private final DocumentProcessingService documentProcessingService;
+    private final RagService                ragService;
 
     public DocumentService(DocumentRepository documentRepository,
                            UserRepository userRepository,
                            FileStorageService fileStorageService,
-                           DocumentProcessingService documentProcessingService) {
+                           DocumentProcessingService documentProcessingService,
+                           RagService ragService) {
         this.documentRepository        = documentRepository;
         this.userRepository            = userRepository;
         this.fileStorageService        = fileStorageService;
         this.documentProcessingService = documentProcessingService;
+        this.ragService                = ragService;
     }
 
     /**
@@ -134,6 +137,9 @@ public class DocumentService {
 
         // Delete file from disk
         fileStorageService.delete(entity.getStoredFileName());
+
+        // Delete associated vector embeddings from pgvector
+        ragService.deleteDocumentVectors(documentId);
 
         // Delete database record
         documentRepository.delete(entity);

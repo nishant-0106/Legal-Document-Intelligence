@@ -53,6 +53,9 @@ public class DocumentEntity {
     @JoinColumn(name = "user_id", nullable = false)
     private UserEntity user;
 
+    @OneToMany(mappedBy = "document", cascade = CascadeType.ALL, orphanRemoval = true)
+    private java.util.List<ChatMessageEntity> chatMessages;
+
     public DocumentEntity() {}
 
     public DocumentEntity(String originalFileName, String storedFileName,

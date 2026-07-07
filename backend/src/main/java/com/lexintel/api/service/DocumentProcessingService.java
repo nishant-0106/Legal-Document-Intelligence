@@ -39,11 +39,14 @@ public class DocumentProcessingService {
 
     private final DocumentRepository   documentRepository;
     private final FileStorageService   fileStorageService;
+    private final RagService           ragService;
 
     public DocumentProcessingService(DocumentRepository documentRepository,
-                                     FileStorageService fileStorageService) {
+                                     FileStorageService fileStorageService,
+                                     RagService ragService) {
         this.documentRepository = documentRepository;
         this.fileStorageService = fileStorageService;
+        this.ragService         = ragService;
     }
 
     /**
@@ -105,6 +108,9 @@ public class DocumentProcessingService {
             entity.setProcessingStatus("PROCESSED");
             entity.setProcessedAt(LocalDateTime.now());
             documentRepository.save(entity);
+
+            // Generate semantic chunks & embeddings for RAG
+            ragService.chunkAndEmbed(entity);
 
             log.info("Processing completed for document id={}: {} page(s), {} chars of text extracted.",
                     documentId, pageCount,
